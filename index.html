@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lectura rápida de palabras</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #111;
+    color: #eee;
+    font-family: system-ui, sans-serif;
+  }
+  .screen { display: none; text-align: center; width: 100%; }
+  .screen.active { display: block; }
+
+  /* Config screen */
+  #config { max-width: 360px; padding: 20px; }
+  #config h1 { font-size: 1.3rem; margin-bottom: 24px; }
+  .field { margin-bottom: 16px; text-align: left; }
+  .field label { display: block; margin-bottom: 6px; font-size: 0.9rem; color: #aaa; }
+  .field input {
+    width: 100%;
+    padding: 10px;
+    font-size: 1rem;
+    background: #222;
+    border: 1px solid #444;
+    color: #eee;
+    border-radius: 6px;
+  }
+  button {
+    padding: 12px 24px;
+    font-size: 1rem;
+    background: #4caf50;
+    border: none;
+    color: white;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-top: 8px;
+  }
+  button:hover { background: #43a047; }
+  button.secondary { background: #555; }
+  button.secondary:hover { background: #666; }
+
+  /* Game screen */
+  #word {
+    font-size: 4rem;
+    font-weight: bold;
+    min-height: 6rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  #progress { margin-top: 20px; color: #888; font-size: 1rem; }
+
+  /* End screen */
+  #end h1 { margin-bottom: 24px; }
+  #wordList {
+    display: none;
+    max-width: 500px;
+    max-height: 50vh;
+    overflow-y: auto;
+    margin: 20px auto;
+    padding: 16px;
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 8px;
+    text-align: left;
+  }
+  #wordList.visible { display: block; }
+  #wordList ol { margin: 0; padding-left: 24px; columns: 2; }
+  #wordList li { padding: 2px 0; }
+
+  #errorBanner {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    background: #b00020;
+    color: white;
+    padding: 12px;
+    font-size: 0.85rem;
+    text-align: left;
+    z-index: 999;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  #errorBanner.visible { display: block; }
+</style>
+</head>
+<body>
+
+<div id="errorBanner"></div>
+
+<div id="config" class="screen active">
+  <h1>Configuración</h1>
+  <div class="field">
+    <label for="wordCount">Cantidad de palabras por partida</label>
+    <input type="number" id="wordCount" min="1" value="20">
+  </div>
+  <div class="field">
+    <label for="frequency">Frecuencia (segundos entre palabras)</label>
+    <input type="number" id="frequency" min="0.1" step="0.1" value="1.5">
+  </div>
+  <button id="startBtn">Comenzar</button>
+</div>
+
+<div id="game" class="screen">
+  <div id="word"></div>
+  <div id="progress"></div>
+</div>
+
+<div id="end" class="screen">
+  <h1>Fin de la partida</h1>
+  <button id="showListBtn" class="secondary">Ver palabras mostradas</button>
+  <button id="restartBtn">Jugar de nuevo</button>
+  <div id="wordList"></div>
+</div>
+
+<script>
+  // Placeholder: reemplazar con la lista definitiva de 1000 objetos comunes.
+  const WORDS = [
+    "mesa", "silla", "puerta", "ventana", "cama", "almohada", "sofá", "sillón",
+    "armario", "cajón", "estante", "lámpara", "espejo", "alfombra", "cortina",
+    "escalera", "techo", "pared", "piso", "chimenea", "banco", "taburete",
+    "cuna", "balcón", "jardín", "cerca", "buzón", "timbre", "plato", "cuchara",
+    "tenedor", "cuchillo", "taza", "vaso", "olla", "sartén", "batidora",
+    "tostadora", "licuadora", "horno", "refrigerador", "microondas", "fregadero",
+    "grifo", "servilleta", "mantel", "jarra", "colador", "tabla", "rallador",
+    "abrelatas", "termo", "bandeja", "delantal", "salero", "jabón", "toalla",
+    "cepillo", "peine", "inodoro", "ducha", "bañera", "champú", "pasta",
+    "secador", "esponja", "balanza", "camisa", "pantalón", "falda", "vestido",
+    "zapato", "bota", "sandalia", "calcetín", "sombrero", "gorra", "bufanda",
+    "guante", "cinturón", "chaqueta", "abrigo", "suéter", "pijama", "corbata",
+    "bolso", "mochila", "billetera", "paraguas", "gafas", "reloj", "cabeza",
+    "mano", "pie", "ojo", "oreja", "nariz", "boca", "brazo", "pierna", "dedo",
+    "cabello", "diente", "cuello", "hombro", "rodilla", "corazón", "árbol",
+    "flor", "sol", "luna", "estrella", "nube", "lluvia", "montaña", "río",
+    "mar", "playa", "piedra", "hoja", "rama", "bosque", "lago", "isla",
+    "volcán", "arcoíris", "nieve", "perro", "gato", "pájaro", "pez", "caballo",
+    "vaca", "gallina", "cerdo", "oveja", "cabra", "conejo", "ratón", "león",
+    "tigre", "elefante", "jirafa", "mono", "oso", "lobo", "zorro", "rana",
+    "tortuga", "serpiente", "araña", "abeja", "mariposa", "hormiga", "pato",
+    "búho", "pingüino", "pan", "leche", "agua", "café", "azúcar", "sal",
+    "huevo", "queso", "manzana", "plátano", "naranja", "uva", "fresa",
+    "sandía", "tomate", "papa", "cebolla", "zanahoria", "lechuga", "arroz",
+    "carne", "pollo", "pescado", "pizza", "hamburguesa", "sopa", "jugo",
+    "pastel", "galleta", "chocolate", "carro", "bicicleta", "moto", "autobús",
+    "tren", "avión", "barco", "camión", "taxi", "helicóptero", "patineta",
+    "cohete", "globo", "tranvía", "ambulancia", "libro", "lápiz", "bolígrafo",
+    "cuaderno", "borrador", "tijeras", "regla", "pizarra", "tiza",
+    "computadora", "calculadora", "pegamento", "marcador", "carpeta", "mapa",
+    "teléfono", "televisor", "radio", "cámara", "control", "altavoz",
+    "cargador", "audífonos", "impresora", "teclado", "tableta", "micrófono",
+    "ventilador", "martillo", "destornillador", "tornillo", "clavo", "sierra",
+    "taladro", "llave", "alicate", "cinta", "pala", "rastrillo", "manguera",
+    "cubo", "escoba", "pelota", "muñeca", "cometa", "rompecabezas", "tambor",
+    "guitarra",
+    "cómoda", "perchero", "macetero", "tapete", "persiana", "farol", "candelabro", "reja",
+    "portón", "azotea", "sótano", "ático", "patio", "terraza", "piscina", "garaje",
+    "cochera", "veleta", "antena", "mecedora", "hamaca", "biombo", "alacena", "vitrina",
+    "librero", "escritorio", "cafetera", "exprimidor", "batidor", "mortero", "wok", "tetera",
+    "azucarera", "frutero", "panera", "hielera", "termómetro", "cronómetro", "temporizador", "congelador",
+    "lavavajillas", "campana", "escurridor", "embudo", "cazuela", "sopera", "bidé", "gel",
+    "crema", "maquillaje", "perfume", "colonia", "desodorante", "rasuradora", "afeitadora", "cortaúñas",
+    "pinza", "jabonera", "alfombrilla", "bata", "chancletas", "overol", "uniforme", "disfraz",
+    "mameluco", "camiseta", "blusa", "short", "polo", "chaleco", "capucha", "gorro",
+    "visera", "mitones", "tirantes", "cordones", "hebilla", "botón", "cremallera", "bolsillo",
+    "manga", "uña", "ceja", "pestaña", "frente", "mejilla", "barbilla", "mentón",
+    "codo", "tobillo", "cintura", "espalda", "pecho", "cadera", "talón", "palma",
+    "puño", "cerebro", "pulmón", "hígado", "riñón", "esqueleto", "músculo", "vena",
+    "cráneo", "costilla", "cascada", "desierto", "pradera", "valle", "cueva", "acantilado",
+    "arena", "ola", "cielo", "viento", "trueno", "relámpago", "huracán", "tornado",
+    "terremoto", "glaciar", "iceberg", "cráter", "géiser", "oasis", "pantano", "selva",
+    "sabana", "tundra", "meteoro", "constelación", "galaxia", "planeta", "eclipse", "delfín",
+    "ballena", "tiburón", "pulpo", "cangrejo", "calamar", "foca", "morsa", "koala",
+    "canguro", "panda", "hipopótamo", "rinoceronte", "cebra", "camello", "llama", "alpaca",
+    "búfalo", "bisonte", "puma", "jaguar", "leopardo", "gorila", "chimpancé", "orangután",
+    "murciélago", "ardilla", "castor", "nutria", "erizo", "topo", "comadreja", "mapache",
+    "zarigüeya", "armadillo", "perezoso", "avestruz", "flamenco", "loro", "águila", "halcón",
+    "cuervo", "gaviota", "cisne", "pavo", "faisán", "colibrí", "tucán", "grillo",
+    "escarabajo", "libélula", "saltamontes", "escorpión", "medusa", "caracol", "babosa", "lombriz",
+    "gusano", "yogur", "mantequilla", "mermelada", "miel", "cereal", "avena", "harina",
+    "aceite", "vinagre", "mostaza", "mayonesa", "ketchup", "salsa", "pimienta", "canela",
+    "vainilla", "limón", "lima", "pera", "durazno", "cereza", "kiwi", "piña",
+    "coco", "mango", "melón", "ciruela", "higo", "granada", "arándano", "frambuesa",
+    "mora", "aguacate", "pepino", "pimiento", "calabaza", "calabacín", "berenjena", "espárrago",
+    "brócoli", "coliflor", "apio", "rábano", "remolacha", "ajo", "jengibre", "champiñón",
+    "maíz", "frijol", "lenteja", "garbanzo", "nuez", "almendra", "maní", "pistacho",
+    "fideos", "tortilla"
+  ];
+
+  const errorBanner = document.getElementById("errorBanner");
+
+  function showError(message) {
+    errorBanner.textContent = "Error: " + message;
+    errorBanner.classList.add("visible");
+  }
+
+  window.addEventListener("error", (e) => {
+    showError(e.message + " (línea " + e.lineno + ")");
+  });
+
+  const configScreen = document.getElementById("config");
+  const gameScreen = document.getElementById("game");
+  const endScreen = document.getElementById("end");
+
+  const wordCountInput = document.getElementById("wordCount");
+  const frequencyInput = document.getElementById("frequency");
+  const wordEl = document.getElementById("word");
+  const progressEl = document.getElementById("progress");
+
+  const STORAGE_KEY = "lecturaRapidaConfig";
+
+  function loadConfig() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+      if (saved) {
+        if (saved.wordCount) wordCountInput.value = saved.wordCount;
+        if (saved.frequency) frequencyInput.value = saved.frequency;
+      }
+    } catch (e) {}
+  }
+
+  function saveConfig(wordCount, frequency) {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ wordCount, frequency }));
+    } catch (e) {}
+  }
+
+  function shuffle(array) {
+    const a = array.slice();
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  function showScreen(screen) {
+    [configScreen, gameScreen, endScreen].forEach(s => s.classList.remove("active"));
+    screen.classList.add("active");
+  }
+
+  let sequence = [];
+  let index = 0;
+  let timerId = null;
+
+  function startGame() {
+    let wordCount = parseInt(wordCountInput.value, 10);
+    let frequency = parseFloat(frequencyInput.value);
+
+    if (!wordCount || wordCount < 1) wordCount = 20;
+    if (!frequency || frequency <= 0) frequency = 1.5;
+
+    wordCount = Math.min(wordCount, WORDS.length);
+
+    saveConfig(wordCount, frequency);
+
+    sequence = shuffle(WORDS).slice(0, wordCount);
+    index = 0;
+
+    showScreen(gameScreen);
+    showNextWord(frequency);
+  }
+
+  function showNextWord(frequency) {
+    if (index >= sequence.length) {
+      clearInterval(timerId);
+      showScreen(endScreen);
+      return;
+    }
+    wordEl.textContent = sequence[index];
+    progressEl.textContent = `${index + 1} / ${sequence.length}`;
+    index++;
+    timerId = setTimeout(() => showNextWord(frequency), frequency * 1000);
+  }
+
+  const wordListEl = document.getElementById("wordList");
+  const showListBtn = document.getElementById("showListBtn");
+
+  showListBtn.addEventListener("click", () => {
+    const isVisible = wordListEl.classList.toggle("visible");
+    if (isVisible) {
+      wordListEl.innerHTML = "<ol>" +
+        sequence.map(w => `<li>${w}</li>`).join("") +
+        "</ol>";
+      showListBtn.textContent = "Ocultar palabras mostradas";
+    } else {
+      showListBtn.textContent = "Ver palabras mostradas";
+    }
+  });
+
+  document.getElementById("startBtn").addEventListener("click", () => {
+    try {
+      startGame();
+    } catch (e) {
+      showError(e.message);
+    }
+  });
+  document.getElementById("restartBtn").addEventListener("click", () => {
+    wordListEl.classList.remove("visible");
+    wordListEl.innerHTML = "";
+    showListBtn.textContent = "Ver palabras mostradas";
+    showScreen(configScreen);
+  });
+
+  loadConfig();
+</script>
+
+</body>
+</html>
