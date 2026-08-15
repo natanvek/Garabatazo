@@ -18,6 +18,8 @@ const SPEECH_LEAD_MS = 250
 export function GameScreen({ sequence, frequencySeconds, language, voiceEnabled, onFinish, onCancel }: Props) {
   const [countdown, setCountdown] = useState(READY_SECONDS)
   const [index, setIndex] = useState(0)
+  const [muted, setMuted] = useState(false)
+  const voiceActive = voiceEnabled && !muted
 
   useEffect(() => {
     if (voiceEnabled) primeSpeech()
@@ -32,10 +34,10 @@ export function GameScreen({ sequence, frequencySeconds, language, voiceEnabled,
   // Borrow lead time from the countdown's last second so word 0 gets the
   // same head start as every other word.
   useEffect(() => {
-    if (!voiceEnabled || countdown !== 1 || !sequence[0]) return
+    if (!voiceActive || countdown !== 1 || !sequence[0]) return
     const timer = setTimeout(() => speak(sequence[0], language), 1000 - SPEECH_LEAD_MS)
     return () => clearTimeout(timer)
-  }, [countdown, sequence, language, voiceEnabled])
+  }, [countdown, sequence, language, voiceActive])
 
   useEffect(() => {
     if (countdown > 0) return
@@ -48,7 +50,7 @@ export function GameScreen({ sequence, frequencySeconds, language, voiceEnabled,
     const leadMs = Math.min(SPEECH_LEAD_MS, intervalMs / 2)
 
     const advanceTimer = setTimeout(() => setIndex((i) => i + 1), intervalMs)
-    const speakNextTimer = voiceEnabled
+    const speakNextTimer = voiceActive
       ? setTimeout(() => {
           const next = sequence[index + 1]
           if (next) speak(next, language)
@@ -59,7 +61,7 @@ export function GameScreen({ sequence, frequencySeconds, language, voiceEnabled,
       clearTimeout(advanceTimer)
       clearTimeout(speakNextTimer)
     }
-  }, [countdown, index, sequence, frequencySeconds, language, voiceEnabled, onFinish])
+  }, [countdown, index, sequence, frequencySeconds, language, voiceActive, onFinish])
 
   useEffect(() => stopSpeaking, [])
 
@@ -71,12 +73,36 @@ export function GameScreen({ sequence, frequencySeconds, language, voiceEnabled,
     }
   }
 
+  function handleToggleMute() {
+    if (!muted) stopSpeaking()
+    setMuted((m) => !m)
+  }
+
+  const controls = (
+    <div className="mt-8 flex justify-center gap-3">
+      {voiceEnabled && (
+        <button
+          onClick={handleToggleMute}
+          className="rounded-md bg-neutral-700 px-5 py-2.5 text-neutral-200 hover:bg-neutral-600"
+        >
+          {muted ? 'Activar voz' : 'Silenciar'}
+        </button>
+      )}
+      <button
+        onClick={handleStop}
+        className="rounded-md bg-neutral-700 px-5 py-2.5 text-neutral-200 hover:bg-neutral-600"
+      >
+        Detener
+      </button>
+    </div>
+  )
+
   if (countdown > 0) {
     return (
       <div className="text-center">
         <div className="flex h-24 items-center justify-center text-6xl font-bold">{countdown}</div>
         <div className="mt-5 text-neutral-500">Prepárate...</div>
-        <StopButton onClick={handleStop} />
+        {controls}
       </div>
     )
   }
@@ -89,18 +115,7 @@ export function GameScreen({ sequence, frequencySeconds, language, voiceEnabled,
       <div className="mt-5 text-neutral-500">
         {Math.min(index + 1, sequence.length)} / {sequence.length}
       </div>
-      <StopButton onClick={handleStop} />
+      {controls}
     </div>
-  )
-}
-
-function StopButton({ onClick }: { onClick: () => void }) {
-  return (
-    <button
-      onClick={onClick}
-      className="mt-8 rounded-md bg-neutral-700 px-5 py-2.5 text-neutral-200 hover:bg-neutral-600"
-    >
-      Detener
-    </button>
   )
 }
