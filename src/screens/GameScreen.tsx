@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { speak, stopSpeaking } from '../lib/tts'
+import { speak, stopSpeaking, primeSpeech } from '../lib/tts'
 
 interface Props {
   sequence: string[]
@@ -18,6 +18,10 @@ const SPEECH_LEAD_MS = 250
 export function GameScreen({ sequence, frequencySeconds, language, voiceEnabled, onFinish, onCancel }: Props) {
   const [countdown, setCountdown] = useState(READY_SECONDS)
   const [index, setIndex] = useState(0)
+
+  useEffect(() => {
+    if (voiceEnabled) primeSpeech()
+  }, [voiceEnabled])
 
   useEffect(() => {
     if (countdown <= 0) return
