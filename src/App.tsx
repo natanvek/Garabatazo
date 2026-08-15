@@ -4,7 +4,7 @@ import { SettingsScreen } from './screens/SettingsScreen'
 import { GameScreen } from './screens/GameScreen'
 import { EndScreen } from './screens/EndScreen'
 import { ensureSeedDictionaries } from './lib/seedDictionaries'
-import { loadConfig } from './lib/gameConfig'
+import { loadConfig, saveConfig } from './lib/gameConfig'
 import { db, type Dictionary } from './lib/db'
 import type { GameConfig } from './types'
 
@@ -28,6 +28,15 @@ export default function App() {
   function openSettings(origin: SettingsOrigin) {
     setSettingsOrigin(origin)
     setScreen('settings')
+  }
+
+  function toggleVoiceEnabled() {
+    setConfig((prev) => {
+      if (!prev) return prev
+      const next = { ...prev, voiceEnabled: !prev.voiceEnabled }
+      saveConfig(next)
+      return next
+    })
   }
 
   function startGame() {
@@ -59,6 +68,7 @@ export default function App() {
           frequencySeconds={config.frequencySeconds}
           language={dictionary.language}
           voiceEnabled={config.voiceEnabled}
+          onToggleVoiceEnabled={toggleVoiceEnabled}
           onFinish={(shown) => {
             setSequence(shown)
             setScreen('end')
