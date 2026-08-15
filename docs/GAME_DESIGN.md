@@ -5,7 +5,7 @@
 1. Each player has a piece of paper ruled into a grid — 32 cells by default,
    but the count is configurable.
 2. Words appear on screen one at a time, fairly quickly (interval
-   configurable, default 1.5s).
+   configurable, default 2.8s).
 3. As each word appears, every player races to draw it in the next empty
    cell on their sheet. No labels, no letters — just a doodle standing in
    for the word.
@@ -26,17 +26,22 @@ scope for now — see `ROADMAP.md`.
 ## Why word choice matters
 
 Because the entire loop hinges on players being able to sketch a word fast
-enough to recognize it later, **dictionary words must be concrete and
-drawable** — physical objects, animals, simple scenes. Abstract nouns,
-emotions, and phenomena that don't reduce to a simple doodle (e.g.
-"corazón"/heart as a concept, "eclipse", "constelación") work poorly and
-should be avoided or flagged.
+enough to recognize it later, **dictionary words need a widely-known, simple
+visual shorthand**. That's a bar of *word familiarity*, not literal
+concreteness — "corazón" (heart) and "eclipse" both work fine because
+everyone immediately knows a simple symbol for them (♥, a sun/moon overlap).
+What actually breaks the game is **obscure or uncommon vocabulary** —
+"zarigüeya" (opossum), "tapete", "biombo" (folding screen) — words a chunk
+of players won't even recognize once spoken, let alone draw or write back
+correctly.
 
 This is a first-class constraint on the dictionary system, not just a
 content-curation afterthought:
 
-- Built-in dictionaries should eventually be reviewed word-by-word for
-  drawability (tracked in `ROADMAP.md`).
+- Built-in dictionaries are reviewed for word familiarity (`es-common`'s
+  first pass tracked in `ROADMAP.md`; ~25 obscure entries removed).
 - The dictionary editor (personalized dictionaries) should nudge users
-  toward concrete nouns — at minimum through guidance text, potentially
-  through a "drawability" flag or filter later on.
+  toward common, everyday words — at minimum through guidance text.
+
+See [`DICTIONARY_GUIDELINES.md`](DICTIONARY_GUIDELINES.md) for the concrete
+checklist, red flags, and strategies used to curate and extend word lists.

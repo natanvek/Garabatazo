@@ -32,5 +32,7 @@ npm test         # run unit tests
   rationale, folder structure, data model
 - [`docs/GAME_DESIGN.md`](docs/GAME_DESIGN.md) — how the game is played, and
   the constraints that follow from it
+- [`docs/DICTIONARY_GUIDELINES.md`](docs/DICTIONARY_GUIDELINES.md) — what
+  makes a word good or bad, and how to find more
 - [`docs/ROADMAP.md`](docs/ROADMAP.md) — phased plan for dictionaries,
   voice, mobile stores, and monetization

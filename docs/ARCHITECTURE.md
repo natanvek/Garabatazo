@@ -66,25 +66,29 @@ same shape with `isBuiltIn: false` once the dictionary editor ships.
 
 ```
 src/
-  App.tsx              screen state machine (config/game/end)
+  App.tsx              screen state machine (start/settings/game/end)
   main.tsx             entry point
   types.ts             shared types (GameConfig, ...)
   screens/
-    ConfigScreen.tsx   cell count + frequency, persisted to localStorage
-    GameScreen.tsx      reveals words on a timer
-    EndScreen.tsx        answer key / restart
+    StartScreen.tsx     big "Comenzar" button + settings (⚙) entry point
+    SettingsScreen.tsx  cell count, frequency, voice toggle
+    GameScreen.tsx      reveals words on a timer; Stop ends early
+    EndScreen.tsx       answer key / restart
   lib/
     db.ts                Dexie database + Dictionary type
-    seedDictionaries.ts   seeds the built-in Spanish dictionary on first run
+    gameConfig.ts         load/save GameConfig to localStorage
+    seedDictionaries.ts   keeps built-in dictionaries in sync with source
+    tts.ts                Web Speech API wrapper
     dictionaries/
-      es-common.ts        built-in Spanish word list (ported as-is, see
-                           GAME_DESIGN.md re: drawability curation)
+      es-common.ts        built-in Spanish word list, curated — see
+                           DICTIONARY_GUIDELINES.md
   test/
     setup.ts              jest-dom matchers for Vitest
 docs/
-  ARCHITECTURE.md   (this file)
-  GAME_DESIGN.md     game rules and constraints they imply
-  ROADMAP.md         phased plan
+  ARCHITECTURE.md            (this file)
+  GAME_DESIGN.md              game rules and constraints they imply
+  DICTIONARY_GUIDELINES.md    what makes a word good or bad
+  ROADMAP.md                  phased plan
 ```
 
 ## Current state vs. original prototype

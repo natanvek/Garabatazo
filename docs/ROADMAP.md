@@ -8,9 +8,11 @@
       32 cells).
 - [x] Seed a built-in Spanish dictionary (`es-common`), ported as-is from
       the prototype's word list.
-- [ ] Curate `es-common` for drawability — review the ~400 words and
-      remove/flag abstract entries (e.g. "corazón", "eclipse",
-      "constelación"). See `docs/GAME_DESIGN.md`.
+- [x] Curate `es-common` for drawability — removed ~25 obscure/uncommon
+      words (e.g. "zarigüeya", "tapete", "biombo", "wok", "tundra"). The bar
+      is word familiarity, not literal concreteness — "corazón" and
+      "eclipse" stayed since they have simple, iconic, widely-recognized
+      symbols. See `docs/GAME_DESIGN.md`.
 
 ## Phase 2 — Dictionaries
 
@@ -19,14 +21,16 @@
       dictionaries; language becomes a first-class selector in Config.
 - [ ] UI translation via i18next once a second UI language is needed
       (distinct from dictionary language).
-- [ ] Guidance/validation nudging users toward concrete, drawable words when
-      authoring personalized dictionaries.
+- [ ] Guidance/validation nudging users toward common, drawable words when
+      authoring personalized dictionaries — see `docs/DICTIONARY_GUIDELINES.md`.
 
 ## Phase 3 — Voice
 
-- [ ] Read each word aloud as it appears (Web Speech API in-browser,
-      `@capacitor-community/text-to-speech` once wrapped natively),
-      matching the dictionary's language.
+- [x] Read each word aloud as it appears, via the browser's Web Speech API
+      (`src/lib/tts.ts`), matching the dictionary's language.
+- [ ] Swap in `@capacitor-community/text-to-speech` once wrapped natively —
+      iOS webview `SpeechSynthesis` support is inconsistent.
+- [x] Voice on/off toggle, in Config, persisted like the other settings.
 
 ## Phase 4 — Mobile stores
 

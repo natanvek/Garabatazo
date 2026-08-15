@@ -1,10 +1,25 @@
 import { useState } from 'react'
+import { GearIcon } from '../components/GearIcon'
 
-export function EndScreen({ sequence, onRestart }: { sequence: string[]; onRestart: () => void }) {
+interface Props {
+  sequence: string[]
+  onRestart: () => void
+  onOpenSettings: () => void
+}
+
+export function EndScreen({ sequence, onRestart, onOpenSettings }: Props) {
   const [showList, setShowList] = useState(false)
 
   return (
-    <div className="w-full max-w-lg px-4 text-center">
+    <div className="relative w-full max-w-lg px-4 text-center">
+      <button
+        onClick={onOpenSettings}
+        aria-label="Configuración"
+        className="absolute right-4 top-0 rounded-full p-2 text-neutral-400 transition hover:bg-neutral-800 hover:text-neutral-100"
+      >
+        <GearIcon className="h-6 w-6" />
+      </button>
+
       <h1 className="mb-6 text-xl font-semibold">Fin de la partida</h1>
 
       <div className="flex justify-center gap-3">
